@@ -1,3 +1,4 @@
+// Package andotp implements functions to encrypt/decrypt andOTP files.
 package andotp
 
 import (
@@ -6,51 +7,52 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 
 	"golang.org/x/crypto/pbkdf2"
 )
 
 const (
-	IV_LEN         int = 12
-	KEY_LEN        int = 32
-	ITERATION_LEN  int = 4
-	SALT_LEN       int = 12
-	MAX_ITERATIONS int = 160000
-	MIN_ITERATIONS int = 140000
+	ivLen         int = 12
+	keyLen        int = 32
+	iterationLen  int = 4
+	saltLen       int = 12
+	maxIterations int = 160000
+	minIterations int = 140000
 )
 
+// Encrypt encrypts plaintext with password according to andotp encryption standard.
+// It returns encrypted byte array and any error encountered.
 func Encrypt(plaintext []byte, password string) ([]byte, error) {
 
 	var finalCipher []byte
-	iter := make([]byte, ITERATION_LEN)
-	iv := make([]byte, IV_LEN)
-	salt := make([]byte, SALT_LEN)
+	iter := make([]byte, iterationLen)
+	iv := make([]byte, ivLen)
+	salt := make([]byte, saltLen)
 
-	iterations := rand.Intn(MAX_ITERATIONS-MIN_ITERATIONS) + MIN_ITERATIONS
+	iterations := rand.Intn(maxIterations-minIterations) + minIterations
 	binary.BigEndian.PutUint32(iter, uint32(iterations))
 
 	_, err := rand.Read(iv)
 	if err != nil {
-		return nil, FormatError(err.Error())
+		return nil, formatError(err.Error())
 	}
 
 	_, err = rand.Read(salt)
 	if err != nil {
-		return nil, FormatError(err.Error())
+		return nil, formatError(err.Error())
 	}
 
-	secretKey := pbkdf2.Key([]byte(password), salt, iterations, KEY_LEN, sha1.New)
+	secretKey := pbkdf2.Key([]byte(password), salt, iterations, keyLen, sha1.New)
 
 	block, err := aes.NewCipher(secretKey)
 	if err != nil {
-		return nil, FormatError(err.Error())
+		return nil, formatError(err.Error())
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, FormatError(err.Error())
+		return nil, formatError(err.Error())
 	}
 
 	cipherText := aesgcm.Seal(nil, iv, plaintext, nil)
@@ -64,37 +66,35 @@ func Encrypt(plaintext []byte, password string) ([]byte, error) {
 
 }
 
+// Decrypt decrypts encryptedtext using password.
+// It returns decrypted byte array and any error encountered.
 func Decrypt(encryptedtext []byte, password string) ([]byte, error) {
 
-	iterations := encryptedtext[:ITERATION_LEN]
-	salt := encryptedtext[ITERATION_LEN : ITERATION_LEN+SALT_LEN]
-	iv := encryptedtext[ITERATION_LEN+SALT_LEN : ITERATION_LEN+SALT_LEN+IV_LEN]
-	cipherText := encryptedtext[ITERATION_LEN+SALT_LEN+IV_LEN:]
+	iterations := encryptedtext[:iterationLen]
+	salt := encryptedtext[iterationLen : iterationLen+saltLen]
+	iv := encryptedtext[iterationLen+saltLen : iterationLen+saltLen+ivLen]
+	cipherText := encryptedtext[iterationLen+saltLen+ivLen:]
 	iter := int(binary.BigEndian.Uint32(iterations))
-	secretKey := pbkdf2.Key([]byte(password), salt, iter, KEY_LEN, sha1.New)
+	secretKey := pbkdf2.Key([]byte(password), salt, iter, keyLen, sha1.New)
 
 	block, err := aes.NewCipher(secretKey)
 	if err != nil {
-		return nil, FormatError(err.Error())
+		return nil, formatError(err.Error())
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, FormatError(err.Error())
+		return nil, formatError(err.Error())
 	}
 
 	plaintextbytes, err := aesgcm.Open(nil, iv, cipherText, nil)
 	if err != nil {
-		return nil, FormatError(err.Error())
+		return nil, formatError(err.Error())
 	}
 
 	return plaintextbytes, nil
 }
 
-func FormatError(e string) error {
+func formatError(e string) error {
 	return fmt.Errorf("error: %s", e)
-}
-
-func ReadFile(file string) ([]byte, error) {
-	return ioutil.ReadFile(file)
 }

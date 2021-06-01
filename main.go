@@ -27,31 +27,25 @@ func main() {
 	flag.Parse()
 
 	if *inputFilePtr == "" {
-		fmt.Println(andotp.FormatError("No input file provided\nSee -h for available options."))
+		fmt.Println(formatError("No input file provided\nSee -h for available options."))
 		os.Exit(0)
 	}
 
 	if *encryptPtr && *decryptPtr {
-		fmt.Println(andotp.FormatError("Please provide any one of encrypt (-e) or decrypt (-d) flag"))
+		fmt.Println(formatError("Please provide any one of encrypt (-e) or decrypt (-d) flag"))
 		os.Exit(0)
 	}
 
 	if *passwordPtr == "" {
 		*passwordPtr = getPassword()
 		if *passwordPtr == "" {
-			fmt.Println(andotp.FormatError("No password provided."))
+			fmt.Println(formatError("No password provided."))
 			os.Exit(0)
 		}
 	}
 
 	if *encryptPtr {
-
-		plaintext, err := andotp.ReadFile(*inputFilePtr)
-		if err != nil {
-			fmt.Print(err.Error())
-			os.Exit(0)
-		}
-
+		plaintext := readFile(*inputFilePtr)
 		filecontent, err := andotp.Encrypt(plaintext, *passwordPtr)
 
 		if err != nil {
@@ -62,24 +56,16 @@ func main() {
 		processfile(filecontent, *outputFilePtr)
 
 	} else if *decryptPtr {
-
-		encryptedtext, err := andotp.ReadFile(*inputFilePtr)
-		if err != nil {
-			fmt.Print(err.Error())
-			os.Exit(0)
-		}
-
+		encryptedtext := readFile(*inputFilePtr)
 		filecontent, err := andotp.Decrypt(encryptedtext, *passwordPtr)
-
 		if err != nil {
 			fmt.Print(err.Error())
 			os.Exit(0)
 		}
-
 		processfile(filecontent, *outputFilePtr)
 
 	} else {
-		fmt.Println(andotp.FormatError("Please provide encrypt (-e) or decrypt (-d) flag"))
+		fmt.Println(formatError("Please provide encrypt (-e) or decrypt (-d) flag"))
 		os.Exit(0)
 	}
 }
@@ -96,8 +82,21 @@ func getPassword() string {
 	fmt.Print("Password: ")
 	pass, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
-		fmt.Print(andotp.FormatError(err.Error()))
+		fmt.Print(formatError(err.Error()))
 	}
 	fmt.Print("\n")
 	return string(pass)
+}
+
+func readFile(file string) []byte {
+	f, err := os.ReadFile(file)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	return f
+}
+
+func formatError(e string) error {
+	return fmt.Errorf("error: %s", e)
 }

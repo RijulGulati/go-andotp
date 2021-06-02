@@ -38,5 +38,19 @@ $ go-andotp -d -i file.aes.json -o file.json
 $ go-andotp -d -i file.aes.json
 ```
 
+## Using go-andotp as library
+go-andotp can be used as library as well. It implements ```Encrypt()``` and ```Decrypt()``` functions to encrypt/decrypt text (respectively).
+It's documentation is available at: https://pkg.go.dev/github.com/grijul/go-andotp/andotp
+
+Example usage:
+```go
+import "github.com/grijul/go-andotp/andotp"
+
+func main() {
+    andotp.Encrypt(...)
+    andotp.Decrypt(...)
+}
+```
+
 # License
 [MIT](https://github.com/grijul/go-andotp/blob/main/LICENSE)

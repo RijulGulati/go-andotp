@@ -29,10 +29,6 @@ func TestEncryptDecrypt(t *testing.T) {
 
 	// With wrong password
 
-	encryptedtext = nil
-	decryptedtext = nil
-	err = nil
-
 	encryptedtext, err = andotp.Encrypt([]byte(jsonstr), password)
 	if err != nil {
 		t.Error(err)

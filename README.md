@@ -1,5 +1,5 @@
 # go-andotp
-CLI program to encrypt/decrypt [andOTP](https://github.com/andOTP/andOTP) files
+CLI program to encrypt/decrypt [andOTP](https://github.com/andOTP/andOTP) files.
 
 ## Installation
 ```sh

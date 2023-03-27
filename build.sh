@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+go version || exit 9
+
 # Linux
 echo "Linux"                                                       && \
 GOOS=linux GOARCH=amd64 go build -o go-andotp-linux-x86_64 main.go && \

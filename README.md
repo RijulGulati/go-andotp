@@ -112,5 +112,25 @@ func main() {
 }
 ```
 
+## Build
+Compile `go-andotp` on your computer:
+
+```shell
+go build -o go-andotp main.go
+```
+
+To compile `go-andotp` for another platform please set the `GOARCH` and `GOOS` environmental variables.
+Example:
+```shell
+GOOS=windows GOARCH=amd64 go build -o go-andotp.exe main.go
+```
+
+To compile `go-andotp` for Windows, macOS and Linux you can use the script `build.sh`:
+```shell
+bash build.sh
+```
+
+More help: <https://go.dev/doc/install/source#environment>
+
 # License
 [MIT](https://github.com/grijul/go-andotp/blob/main/LICENSE)

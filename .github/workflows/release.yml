@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    name: Build
+    # https://github.com/actions/virtual-environments/
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: 🛎️ Checkout
+        uses: actions/checkout@v3
+
+      # https://github.com/marketplace/actions/setup-go-environment
+      - name: 🔧 Setup go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
+
+      - name: 🍳 Build
+        run: bash build.sh
+
+      # Test binary
+      - name: 🌡️ Test
+        run: chmod +x go-andotp-linux-x86_64 && ./go-andotp-linux-x86_64 -h
+
+      # Upload binaries
+      # https://github.com/marketplace/actions/upload-a-build-artifact
+      - name: 📤 Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: go-andotp
+          path: go-andotp*
+          retention-days: 1
+
+  test-linux:
+    name: Test Linux
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Checkout
+        uses: actions/checkout@v3
+      # Download binaries
+      # https://github.com/marketplace/actions/download-a-build-artifact
+      - name: 📥 Download
+        uses: actions/download-artifact@v3
+        with:
+          name: go-andotp
+      # Test binary
+      - name: 🌡️ Test
+        run: chmod +x go-andotp-linux-x86_64 && ./go-andotp-linux-x86_64 -h
+
+  test-macos:
+    name: Test macOS
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - name: 🛎️ Checkout
+        uses: actions/checkout@v3
+      - name: 📥 Download
+        uses: actions/download-artifact@v3
+        with:
+          name: go-andotp
+      # Test binary
+      - name: 🌡️ Test
+        run: chmod +x go-andotp-macos-x86_64 && ./go-andotp-macos-x86_64 -h
+
+  test-windows:
+    name: Test Windows
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: 🛎️ Checkout
+        uses: actions/checkout@v3
+      - name: 📥 Download
+        uses: actions/download-artifact@v3
+        with:
+          name: go-andotp
+      # Test binary
+      - name: 🌡️ Test
+        run: .\go-andotp-windows-x86_64.exe -h
+
+  release:
+    name: Release
+    needs: [test-linux, test-macos, test-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Checkout
+        uses: actions/checkout@v3
+      - name: 📥 Download
+        uses: actions/download-artifact@v3
+        with:
+          name: go-andotp
+      # Release, upload files
+      # https://github.com/marketplace/actions/gh-release
+      - name: ✨ Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            go-andotp-linux-x86_64
+            go-andotp-linux-arm64
+            go-andotp-macos-x86_64
+            go-andotp-macos-arm64
+            go-andotp-windows-x86_64.exe
+            go-andotp-windows-arm64.exe
